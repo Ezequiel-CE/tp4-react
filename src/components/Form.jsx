@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import uniqid from "uniqid";
 
 const Form = ({ addPersona, personaToEdit, stopEdit, updatePersona }) => {
   const [inputs, setInputs] = useState({ nombre: "", apellido: "", edad: "" });
@@ -26,7 +25,7 @@ const Form = ({ addPersona, personaToEdit, stopEdit, updatePersona }) => {
       window.alert("Rellena todo el formulario");
       return;
     }
-    addPersona({ id: uniqid(), nombre, apellido, edad });
+    addPersona({ nombre, apellido, edad });
     cleanInputs();
   };
 

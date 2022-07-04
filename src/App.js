@@ -1,24 +1,46 @@
 import Form from "./components/Form";
 import ListadoPersonas from "./components/ListadoPersonas";
-import { useState } from "react";
-import uniqid from "uniqid";
+import { useEffect, useState } from "react";
 
 const App = () => {
-  const [personas, setPersonas] = useState([
-    { id: uniqid(), nombre: "Juan Roman", apellido: "Riquelmes", edad: 44 },
-    { id: uniqid(), nombre: "Peter", apellido: "Parker", edad: 22 },
-  ]);
+  const [personas, setPersonas] = useState([]);
 
   const [personaToEdit, setPersonaToEdit] = useState(null);
 
-  const addPersonaHandler = (persona) => {
-    setPersonas((prevState) => [...prevState, persona]);
+  const addPersonaHandler = async (persona) => {
+    try {
+      const response = await fetch("http://localhost:4000/personas", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(persona),
+      });
+
+      if (!response.ok) throw new Error();
+
+      const nuevaTarea = await response.json();
+
+      setPersonas((prevState) => [...prevState, nuevaTarea]);
+    } catch (error) {
+      console.log("no se puedo agregar persona");
+    }
   };
 
-  const deletePersonaHandler = (id) => {
-    setPersonas((prevState) =>
-      prevState.filter((persona) => persona.id !== id)
-    );
+  const deletePersonaHandler = async (id) => {
+    if (!window.confirm("¿Desea eliminar la tarea?")) return;
+
+    try {
+      const response = await fetch("http://localhost:4000/personas/" + id, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error();
+
+      setPersonas((prevState) => prevState.filter((tarea) => tarea.id !== id));
+    } catch (error) {
+      console.log("no se puedo borrar persona");
+    }
   };
 
   const startEditModeHandler = (persona) => {
@@ -29,17 +51,46 @@ const App = () => {
     setPersonaToEdit(null);
   };
 
-  const updatePersonaHandler = (id, newPersona) => {
-    setPersonas((prevState) => {
-      return prevState.map((persona) => {
-        if (persona.id === id) {
-          return { id, ...newPersona };
-        }
-        return persona;
+  const updatePersonaHandler = async (id, newPersona) => {
+    try {
+      const response = await fetch("http://localhost:4000/personas/" + id, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPersona),
       });
-    });
-    setPersonaToEdit(null);
+      if (!response.ok) throw new Error();
+
+      setPersonas((prevState) => {
+        return prevState.map((persona) => {
+          if (persona.id === id) {
+            return { id, ...newPersona };
+          }
+          return persona;
+        });
+      });
+      setPersonaToEdit(null);
+    } catch (error) {
+      console.log("no se pudo actualizar persona");
+    }
   };
+
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/personas");
+        if (!response.ok) throw new Error();
+
+        const personasData = await response.json();
+        setPersonas(personasData);
+      } catch (error) {
+        console.log("no se puedo cargar las personas");
+      }
+    };
+
+    fetchPersonas();
+  }, []);
 
   return (
     <div className="min-h-screen bg-cyan-400  ">
